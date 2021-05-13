@@ -1,0 +1,71 @@
+# file: mysql/tasks/secure.yml
+- debug: var=ansible_hostname
+- name: MySQL | Configure MySql for easy access as root user
+  template:
+    src: root_dot_my.cnf.j2
+    dest: '{{ mysql_user_home }}/.my.cnf'
+    owner: "{{ansible_user}}"
+    group: "{{ansible_user}}"
+    mode: 0600
+
+- name:  MySQL | Test whether the root password has already been changed (local hostname).
+  become: yes
+  mysql_user:
+    user: 'root'
+    host: "{{item}}"
+    password: "{{mysql_root_password}}"
+    login_user: 'root'
+    login_password: "{{mysql_root_password}}"
+    login_unix_socket: '{{ login_unix_socket }}'
+    check_implicit_admin: yes
+    priv: "*.*:ALL,GRANT"
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+   - cliente
+  register: root_pw_already_set
+  ignore_errors: yes
+  when: ansible_hostname == 'cliente'
+  tags:
+    - change_root_password
+
+- name: MySQL | Changing the root password (local hostname).
+  become: yes
+  mysql_user:
+    user: root
+    host: "{{item}}"
+    password: "{{mysql_root_password}}"
+    login_user: root
+    login_password: "{{mysql_root_password}}"
+    login_unix_socket: '{{ login_unix_socket }}'
+    priv: "*.*:ALL,GRANT"
+  with_items:
+   - 127.0.0.1
+   - ::1
+   - localhost
+   - cliente
+  when: "root_pw_already_set and ansible_hostname == 'cliente'"
+  tags:
+    - change_root_password
+
+- name: MySQL | Remove anonymous MySQL server user
+  mysql_user:
+    name: ""
+    host: "{{item}}"
+    state: absent
+  with_items:
+    - "{{ansible_hostname}}"
+    - localhost
+
+- name: MySQL | Remove the MySQL test database
+  mysql_db:
+    name: test
+    state: absent
+
+- name: Reload privilege tables
+  command: 'mysql -ne "{{ item }}"'
+  with_items:
+    - FLUSH PRIVILEGES
+  changed_when: False
+

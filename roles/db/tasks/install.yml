@@ -1,0 +1,62 @@
+- name: packages | ensure apt list dir exists
+  file:
+    path: /var/lib/apt/lists/
+    state: directory
+    mode: 0755
+
+    #- name: add universe repository for bionic
+    #  apt_repository: 
+    #    repo: deb mirror/llx19/bionic bionic universe
+    #    state: present
+
+    #- name: update apt list
+    #  apt: 
+    #    update: yes
+
+- name: install python
+  become: yes # needed if the other tasks are not played as root
+  apt: name={{ item }} state=present
+  with_items:
+      - python3-minimal
+      - python3-venv
+      - python3-pip
+
+- name: install Mysql
+  become: yes # needed if the other tasks are not played as root
+  apt: name={{ item }} state=present
+  with_items:
+      - mysql-server
+      - mysql-client
+      - python3-mysqldb
+      - python-pymysql
+
+- name: Ensure mysql is running and starts on boot
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+  become: yes
+
+  #- name: Create `/lliurex-admin/.my.cnf`  with root password credentials
+  #template:
+  #  src:  my.cnf.j2
+  #  dest: /home/lliurex-admin/.my.cnf
+  #  owner: lliurex-admin
+  #  mode: 0600
+  #become: yes
+  #- name: update mysql root password for all root accounts  
+  #mysql_user:  
+  #  name: root  
+  #  password: "{{ upassword }}"  
+  #  host: localhost
+  #  login_host: localhost
+  #  login_user: "{{ dbuser }}"  
+  #  login_port: "{{ mysql_port }}"  
+  #  login_password: "{{ upassword }}"  
+    #check_implicit_admin: yes  
+    #priv: "*.*:ALL,GRANT"  
+    #  login_unix_socket: '/var/run/mysqld/mysqld.sock' 
+    #register: return_assigned_mysql_password_root_account
+    #   with_items:  
+    #- "127.0.0.1"  
+    #- "localhost"

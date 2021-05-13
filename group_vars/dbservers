@@ -1,0 +1,13 @@
+---
+mysqlservice: mysqld
+mysql_port: 3306
+dbuser: root
+dbname: practicasdb
+upassword: alumsecrect
+
+# You have to change this to your own strong enough mysql root password
+#mysql_root_password: '-----====>SetR00tPa$$wordH3r3!!!<====-----'
+# There .my.cnf with mysql root credentials will be installed
+#mysql_user_home: "{{ ansible_env.HOME}}"
+#Path socket
+#login_unix_socket: '/var/run/mysqld/mysqld.sock'
